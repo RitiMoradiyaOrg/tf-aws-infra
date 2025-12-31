@@ -194,7 +194,7 @@ resource "aws_instance" "webapp" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.application.id]
-  key_name               = var.ec2_key_name # ADDED THIS LINE
+  key_name               = var.ec2_key_name  # ADDED THIS LINE
 
   root_block_device {
     volume_size           = 25
