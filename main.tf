@@ -577,7 +577,7 @@ resource "aws_autoscaling_group" "webapp" {
   max_size                  = var.asg_max_size
   desired_capacity          = var.asg_desired_capacity
   default_cooldown          = var.asg_cooldown
-  vpc_zone_identifier       = aws_subnet.public[*].id
+  vpc_zone_identifier       = aws_subnet.private[*].id # ✅ CHANGED TO PRIVATE
   target_group_arns         = [aws_lb_target_group.webapp.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
