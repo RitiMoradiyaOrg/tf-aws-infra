@@ -436,6 +436,40 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 #######################################
+# CLOUDWATCH LOG GROUPS (ASSIGNMENT 07)
+#######################################
+
+# CloudWatch Log Group for Info Logs
+resource "aws_cloudwatch_log_group" "webapp_info" {
+  name              = "/aws/ec2/webapp/info"
+  retention_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-webapp-info-logs"
+  })
+}
+
+# CloudWatch Log Group for Warn Logs
+resource "aws_cloudwatch_log_group" "webapp_warn" {
+  name              = "/aws/ec2/webapp/warn"
+  retention_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-webapp-warn-logs"
+  })
+}
+
+# CloudWatch Log Group for Error Logs
+resource "aws_cloudwatch_log_group" "webapp_error" {
+  name              = "/aws/ec2/webapp/error"
+  retention_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-webapp-error-logs"
+  })
+}
+
+#######################################
 # ASSIGNMENT 08: AUTO SCALING & LOAD BALANCER
 #######################################
 
@@ -577,7 +611,7 @@ resource "aws_autoscaling_group" "webapp" {
   max_size                  = var.asg_max_size
   desired_capacity          = var.asg_desired_capacity
   default_cooldown          = var.asg_cooldown
-  vpc_zone_identifier       = aws_subnet.private[*].id # ✅ CHANGED TO PRIVATE
+  vpc_zone_identifier       = aws_subnet.private[*].id
   target_group_arns         = [aws_lb_target_group.webapp.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
