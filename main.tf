@@ -74,6 +74,33 @@ resource "aws_internet_gateway" "main" {
   })
 }
 
+#######################################
+# NAT GATEWAY (FOR PRIVATE SUBNET INTERNET ACCESS)
+#######################################
+
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-nat-eip"
+  })
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# NAT Gateway (in first public subnet)
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-nat-gateway"
+  })
+
+  depends_on = [aws_internet_gateway.main]
+}
+
 # Public Subnets with Ultra-Dynamic Distribution
 resource "aws_subnet" "public" {
   count                   = local.actual_subnet_count
@@ -130,6 +157,13 @@ resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.main.id
+}
+
+# Private Route - Internet access through NAT Gateway
+resource "aws_route" "private_internet_access" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
 }
 
 # Public Route Table Associations
@@ -254,6 +288,7 @@ resource "aws_security_group" "database" {
     Name = "${var.vpc_name}-database-sg"
   })
 }
+
 
 #######################################
 # RDS RESOURCES
@@ -423,6 +458,12 @@ resource "aws_iam_role_policy" "s3_policy" {
 resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# Attach SSM Policy to EC2 Role (NEW - FOR SESSION MANAGER ACCESS)
+resource "aws_iam_role_policy_attachment" "ssm_policy" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 # IAM Instance Profile
