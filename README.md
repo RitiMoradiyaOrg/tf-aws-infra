@@ -1,6 +1,6 @@
 # Terraform AWS Infrastructure
 
-This repository contains Terraform configurations for setting up AWS networking infrastructure for the CSYE 6225 course.
+This repository contains Terraform configurations for setting up AWS networking infrastructure
 
 ## Infrastructure Components
 

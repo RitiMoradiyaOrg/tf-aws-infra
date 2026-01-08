@@ -454,6 +454,25 @@ resource "aws_iam_role_policy" "s3_policy" {
   })
 }
 
+# IAM Policy for SNS Publish (NEW FOR ASSIGNMENT 09)
+resource "aws_iam_role_policy" "sns_policy" {
+  name = "${var.vpc_name}-sns-policy"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.user_registration.arn
+      }
+    ]
+  })
+}
+
 # Attach CloudWatch Agent Policy to EC2 Role
 resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy" {
   role       = aws_iam_role.ec2_role.name
@@ -557,6 +576,7 @@ resource "aws_launch_template" "webapp" {
               DB_NAME=${var.db_name}
               S3_BUCKET_NAME=${random_uuid.s3_bucket.result}
               AWS_REGION=${var.region}
+              SNS_TOPIC_ARN=${aws_sns_topic.user_registration.arn}
               ENVFILE
               
               # Set proper ownership
