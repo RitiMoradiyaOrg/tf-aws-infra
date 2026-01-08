@@ -58,3 +58,37 @@ output "s3_bucket_name" {
   description = "S3 bucket name for images"
   value       = aws_s3_bucket.images.id
 }
+
+#######################################
+# ASSIGNMENT 09 OUTPUTS
+#######################################
+
+output "sns_topic_arn" {
+  description = "ARN of the SNS topic for user registration notifications"
+  value       = aws_sns_topic.user_registration.arn
+}
+
+output "sns_topic_name" {
+  description = "Name of the SNS topic"
+  value       = aws_sns_topic.user_registration.name
+}
+
+output "lambda_function_name" {
+  description = "Name of the Lambda function for email verification"
+  value       = aws_lambda_function.email_verification.function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN of the Lambda function"
+  value       = aws_lambda_function.email_verification.arn
+}
+
+output "dynamodb_table_name" {
+  description = "Name of the DynamoDB table for email tracking"
+  value       = aws_dynamodb_table.email_tracking.name
+}
+
+output "dynamodb_table_arn" {
+  description = "ARN of the DynamoDB table"
+  value       = aws_dynamodb_table.email_tracking.arn
+}
