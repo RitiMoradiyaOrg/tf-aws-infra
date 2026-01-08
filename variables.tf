@@ -105,7 +105,7 @@ variable "db_parameter_family" {
 }
 
 #######################################
-# NEW VARIABLES FOR ASSIGNMENT 08
+# ASSIGNMENT 08 VARIABLES
 #######################################
 
 variable "domain_name" {
@@ -185,4 +185,71 @@ variable "health_check_unhealthy_threshold" {
   description = "Number of consecutive health check failures required"
   type        = number
   default     = 2
+}
+
+#######################################
+# ASSIGNMENT 09 VARIABLES
+# Email Verification System
+#######################################
+
+# SNS Topic
+variable "sns_topic_name" {
+  description = "Name of the SNS topic for user registration notifications"
+  type        = string
+  default     = "user-registration-topic"
+}
+
+# DynamoDB Table
+variable "dynamodb_table_name" {
+  description = "Name of the DynamoDB table for email tracking"
+  type        = string
+  default     = "EmailVerificationTracking"
+}
+
+# Lambda Function
+variable "lambda_function_name" {
+  description = "Name of the Lambda function for email verification"
+  type        = string
+  default     = "emailVerificationLambda"
+}
+
+variable "lambda_runtime" {
+  description = "Runtime for Lambda function"
+  type        = string
+  default     = "nodejs18.x"
+}
+
+variable "lambda_handler" {
+  description = "Handler for Lambda function"
+  type        = string
+  default     = "index.handler"
+}
+
+variable "lambda_zip_path" {
+  description = "Path to Lambda function ZIP file"
+  type        = string
+  default     = "./lambda/email-verification.zip"
+}
+
+variable "lambda_timeout" {
+  description = "Lambda function timeout in seconds"
+  type        = number
+  default     = 60
+}
+
+variable "lambda_memory" {
+  description = "Lambda function memory in MB"
+  type        = number
+  default     = 256
+}
+
+# SES Configuration
+variable "ses_from_email" {
+  description = "Email address to send verification emails from"
+  type        = string
+}
+
+variable "ses_domain" {
+  description = "Domain for SES email sending"
+  type        = string
 }
