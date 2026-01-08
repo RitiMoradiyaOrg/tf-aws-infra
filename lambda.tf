@@ -19,11 +19,11 @@ resource "aws_lambda_function" "email_verification" {
   # Environment variables for Lambda
   environment {
     variables = {
-      DOMAIN            = "${var.subdomain}.${var.domain_name}"
-      SES_FROM_EMAIL    = var.ses_from_email
-      AWS_REGION        = var.region
-      DYNAMODB_TABLE    = aws_dynamodb_table.email_tracking.name
-      SNS_TOPIC_ARN     = aws_sns_topic.user_registration.arn
+      DOMAIN         = "${var.subdomain}.${var.domain_name}"
+      SES_FROM_EMAIL = var.ses_from_email
+      AWS_REGION     = var.region
+      DYNAMODB_TABLE = aws_dynamodb_table.email_tracking.name
+      SNS_TOPIC_ARN  = aws_sns_topic.user_registration.arn
     }
   }
 
