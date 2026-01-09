@@ -1,6 +1,5 @@
 #######################################
 # SECRETS MANAGER FOR DB PASSWORD
-# Assignment 09
 #######################################
 
 # Generate random password for RDS

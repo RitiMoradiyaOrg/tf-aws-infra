@@ -328,11 +328,11 @@ resource "aws_db_instance" "main" {
   allocated_storage = var.db_allocated_storage
   storage_type      = "gp2"
   storage_encrypted = true
-  kms_key_id        = aws_kms_key.rds.arn  # ✅ NEW - Use our custom KMS key
+  kms_key_id        = aws_kms_key.rds.arn # ✅ NEW - Use our custom KMS key
 
   db_name  = var.db_name
   username = var.db_username
-  password = random_password.db_password.result  # ✅ CHANGED - Use auto-generated password
+  password = random_password.db_password.result # ✅ CHANGED - Use auto-generated password
   port     = var.db_port
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
@@ -371,8 +371,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "images" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"  # ✅ CHANGED - Use KMS instead of AES256
-      kms_master_key_id = aws_kms_key.s3.arn  # ✅ NEW - Our custom S3 KMS key
+      sse_algorithm     = "aws:kms"          # ✅ CHANGED - Use KMS instead of AES256
+      kms_master_key_id = aws_kms_key.s3.arn # ✅ NEW - Our custom S3 KMS key
     }
   }
 }
@@ -591,8 +591,8 @@ resource "aws_launch_template" "webapp" {
       volume_size           = 25
       volume_type           = "gp2"
       delete_on_termination = true
-      encrypted             = true  # ✅ CHANGED - Enable encryption
-      kms_key_id            = aws_kms_key.ebs.arn  # ✅ NEW - Use our custom EBS KMS key
+      encrypted             = true                # ✅ CHANGED - Enable encryption
+      kms_key_id            = aws_kms_key.ebs.arn # ✅ NEW - Use our custom EBS KMS key
     }
   }
 

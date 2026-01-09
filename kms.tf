@@ -1,6 +1,5 @@
 #######################################
 # KMS KEYS FOR ENCRYPTION
-# Assignment 09
 #######################################
 
 # KMS Key for EC2 EBS Volumes
