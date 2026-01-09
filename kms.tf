@@ -49,6 +49,22 @@ resource "aws_kms_key" "ebs" {
         Sid    = "Allow Auto Scaling to use the key"
         Effect = "Allow"
         Principal = {
+          Service = "autoscaling.amazonaws.com" # ✅ FIXED - Was aws_iam_role.ec2_role.arn
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:Encrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:CreateGrant",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow EC2 role to use the key" # ✅ NEW - For operations after launch
+        Effect = "Allow"
+        Principal = {
           AWS = aws_iam_role.ec2_role.arn
         }
         Action = [
