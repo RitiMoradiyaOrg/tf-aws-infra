@@ -15,10 +15,10 @@ resource "random_password" "db_password" {
 
 # Store DB password in Secrets Manager
 resource "aws_secretsmanager_secret" "db_password" {
-  name                    = "${var.vpc_name}-db-password-${var.subdomain}"
+  name                    = "${var.vpc_name}-db-password-${var.subdomain}-v2"
   description             = "RDS database password for ${var.subdomain} environment"
   kms_key_id              = aws_kms_key.secrets.id
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0 # ✅ CHANGED - Force delete immediately (no recovery window)
 
   tags = merge(local.common_tags, {
     Name       = "${var.vpc_name}-db-password"
