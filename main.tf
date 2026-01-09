@@ -184,7 +184,7 @@ resource "aws_route_table_association" "private" {
 # SECURITY GROUPS
 #######################################
 
-# Load Balancer Security Group (NEW FOR ASSIGNMENT 08)
+# Load Balancer Security Group
 resource "aws_security_group" "load_balancer" {
   name        = "${var.vpc_name}-load-balancer-sg"
   description = "Security group for Application Load Balancer"
@@ -222,7 +222,7 @@ resource "aws_security_group" "load_balancer" {
   })
 }
 
-# Application Security Group (UPDATED FOR ASSIGNMENT 08)
+# Application Security Group
 resource "aws_security_group" "application" {
   name        = "${var.vpc_name}-application-sg"
   description = "Security group for web application"
@@ -289,7 +289,6 @@ resource "aws_security_group" "database" {
   })
 }
 
-
 #######################################
 # RDS RESOURCES
 #######################################
@@ -329,10 +328,11 @@ resource "aws_db_instance" "main" {
   allocated_storage = var.db_allocated_storage
   storage_type      = "gp2"
   storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds.arn  # ✅ NEW - Use our custom KMS key
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = random_password.db_password.result  # ✅ CHANGED - Use auto-generated password
   port     = var.db_port
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
@@ -371,7 +371,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "images" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm     = "aws:kms"  # ✅ CHANGED - Use KMS instead of AES256
+      kms_master_key_id = aws_kms_key.s3.arn  # ✅ NEW - Our custom S3 KMS key
     }
   }
 }
@@ -449,12 +450,22 @@ resource "aws_iam_role_policy" "s3_policy" {
           aws_s3_bucket.images.arn,
           "${aws_s3_bucket.images.arn}/*"
         ]
+      },
+      # ✅ NEW - Allow EC2 to use S3 KMS key for encryption
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:Encrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = aws_kms_key.s3.arn
       }
     ]
   })
 }
 
-# IAM Policy for SNS Publish (NEW FOR ASSIGNMENT 09)
+# IAM Policy for SNS Publish
 resource "aws_iam_role_policy" "sns_policy" {
   name = "${var.vpc_name}-sns-policy"
   role = aws_iam_role.ec2_role.id
@@ -473,13 +484,41 @@ resource "aws_iam_role_policy" "sns_policy" {
   })
 }
 
+# ✅ NEW - IAM Policy for Secrets Manager Access
+resource "aws_iam_role_policy" "secrets_policy" {
+  name = "${var.vpc_name}-secrets-policy"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.db_password.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = aws_kms_key.secrets.arn
+      }
+    ]
+  })
+}
+
 # Attach CloudWatch Agent Policy to EC2 Role
 resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
-# Attach SSM Policy to EC2 Role (NEW - FOR SESSION MANAGER ACCESS)
+# Attach SSM Policy to EC2 Role
 resource "aws_iam_role_policy_attachment" "ssm_policy" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -496,7 +535,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 #######################################
-# CLOUDWATCH LOG GROUPS (ASSIGNMENT 07)
+# CLOUDWATCH LOG GROUPS
 #######################################
 
 # CloudWatch Log Group for Info Logs
@@ -530,10 +569,10 @@ resource "aws_cloudwatch_log_group" "webapp_error" {
 }
 
 #######################################
-# ASSIGNMENT 08: AUTO SCALING & LOAD BALANCER
+# AUTO SCALING & LOAD BALANCER
 #######################################
 
-# Launch Template (Replaces standalone EC2 instance)
+# Launch Template
 resource "aws_launch_template" "webapp" {
   name          = "${var.vpc_name}-launch-template"
   description   = "Launch template for webapp Auto Scaling Group"
@@ -552,7 +591,8 @@ resource "aws_launch_template" "webapp" {
       volume_size           = 25
       volume_type           = "gp2"
       delete_on_termination = true
-      encrypted             = false
+      encrypted             = true  # ✅ CHANGED - Enable encryption
+      kms_key_id            = aws_kms_key.ebs.arn  # ✅ NEW - Use our custom EBS KMS key
     }
   }
 
@@ -562,8 +602,16 @@ resource "aws_launch_template" "webapp" {
     delete_on_termination       = true
   }
 
+  # ✅ CHANGED - User data now retrieves password from Secrets Manager
   user_data = base64encode(<<-EOF
               #!/bin/bash
+              
+              # Retrieve DB password from Secrets Manager
+              DB_PASSWORD=$(aws secretsmanager get-secret-value \
+                --secret-id ${aws_secretsmanager_secret.db_password.name} \
+                --region ${var.region} \
+                --query SecretString \
+                --output text)
               
               # Update environment file with RDS connection details
               cat > /opt/webapp/.env << 'ENVFILE'
@@ -572,7 +620,7 @@ resource "aws_launch_template" "webapp" {
               DB_HOST=${aws_db_instance.main.address}
               DB_PORT=${var.db_port}
               DB_USER=${var.db_username}
-              DB_PASSWORD=${var.db_password}
+              DB_PASSWORD=$DB_PASSWORD
               DB_NAME=${var.db_name}
               S3_BUCKET_NAME=${random_uuid.s3_bucket.result}
               AWS_REGION=${var.region}
