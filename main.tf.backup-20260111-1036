@@ -586,7 +586,7 @@ resource "aws_launch_template" "webapp" {
   }
 
   network_interfaces {
-    associate_public_ip_address = false # ✅ FIXED - Private subnets don't need public IPs
+    associate_public_ip_address = false  # ✅ FIXED - Private subnets don't need public IPs
     security_groups             = [aws_security_group.application.id]
     delete_on_termination       = true
   }
