@@ -39,13 +39,12 @@ resource "aws_kms_key" "ebs" {
           "kms:DescribeKey"
         ]
         Resource = "*"
-        # ✅ CONDITION REMOVED - This was blocking Auto Scaling
       },
       {
         Sid    = "Allow Auto Scaling to use the key"
         Effect = "Allow"
         Principal = {
-          Service = "autoscaling.amazonaws.com"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
         }
         Action = [
           "kms:Decrypt",
@@ -53,11 +52,25 @@ resource "aws_kms_key" "ebs" {
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*",
           "kms:CreateGrant",
-          "kms:DescribeKey",
-          "kms:ListGrants",
-          "kms:RevokeGrant"
+          "kms:DescribeKey"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "Allow Auto Scaling to create grants"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+        }
+        Action = [
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = "true"
+          }
+        }
       },
       {
         Sid    = "Allow EC2 role to use the key"
@@ -74,24 +87,6 @@ resource "aws_kms_key" "ebs" {
           "kms:DescribeKey"
         ]
         Resource = "*"
-      },
-      {
-        Sid    = "Allow attachment of persistent resources"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = [
-          "kms:CreateGrant",
-          "kms:ListGrants",
-          "kms:RevokeGrant"
-        ]
-        Resource = "*"
-        Condition = {
-          Bool = {
-            "kms:GrantIsForAWSResource" = "true"
-          }
-        }
       }
     ]
   })
