@@ -39,17 +39,13 @@ resource "aws_kms_key" "ebs" {
           "kms:DescribeKey"
         ]
         Resource = "*"
-        Condition = {
-          StringEquals = {
-            "kms:ViaService" = "ec2.${var.region}.amazonaws.com"
-          }
-        }
+        # ✅ CONDITION REMOVED - This was blocking Auto Scaling
       },
       {
         Sid    = "Allow Auto Scaling to use the key"
         Effect = "Allow"
         Principal = {
-          Service = "autoscaling.amazonaws.com" # ✅ FIXED - Was aws_iam_role.ec2_role.arn
+          Service = "autoscaling.amazonaws.com"
         }
         Action = [
           "kms:Decrypt",
@@ -57,12 +53,14 @@ resource "aws_kms_key" "ebs" {
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*",
           "kms:CreateGrant",
-          "kms:DescribeKey"
+          "kms:DescribeKey",
+          "kms:ListGrants",
+          "kms:RevokeGrant"
         ]
         Resource = "*"
       },
       {
-        Sid    = "Allow EC2 role to use the key" # ✅ NEW - For operations after launch
+        Sid    = "Allow EC2 role to use the key"
         Effect = "Allow"
         Principal = {
           AWS = aws_iam_role.ec2_role.arn
@@ -252,6 +250,7 @@ resource "aws_kms_key" "secrets" {
           "kms:Encrypt",
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*",
+          "kms:GenerateDataKeyWithoutPlainText",
           "kms:CreateGrant",
           "kms:DescribeKey"
         ]
