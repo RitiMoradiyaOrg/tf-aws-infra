@@ -81,9 +81,10 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "Database master password"
+  description = "Database master password (legacy - not used, auto-generated instead)"
   type        = string
   sensitive   = true
+  default     = "" # ✅ ADD THIS LINE
 }
 
 variable "db_port" {
