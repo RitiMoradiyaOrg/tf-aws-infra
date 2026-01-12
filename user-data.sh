@@ -53,8 +53,11 @@ fi
 echo ""
 echo "📝 Creating environment configuration..."
 
-# ✅ FIX: Use quoted HERE document to prevent variable expansion
-# Then manually substitute each variable safely
+# ✅ CRITICAL FIX: Properly escape password for sed
+# This handles ALL special characters: { } * $ | [ ] \ / . ^ and more
+ESCAPED_PASSWORD=$(printf '%s\n' "$DB_PASSWORD" | sed -e 's/[]\/$*.^[]/\\&/g' -e 's/|/\\|/g')
+
+# Create .env with placeholders using quoted HERE document
 cat > /opt/webapp/.env << 'EOF'
 DB_HOST=PLACEHOLDER_DB_HOST
 DB_PORT=5432
@@ -71,10 +74,10 @@ LOG_LEVEL=info
 INSTANCE_ID=PLACEHOLDER_INSTANCE_ID
 EOF
 
-# ✅ Now safely substitute each placeholder using sed
+# ✅ Now safely substitute each placeholder using sed with escaped password
 sed -i "s|PLACEHOLDER_DB_HOST|${db_host}|g" /opt/webapp/.env
 sed -i "s|PLACEHOLDER_DB_USER|${db_username}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_DB_PASSWORD|$DB_PASSWORD|g" /opt/webapp/.env
+sed -i "s|PLACEHOLDER_DB_PASSWORD|$ESCAPED_PASSWORD|g" /opt/webapp/.env
 sed -i "s|PLACEHOLDER_DB_NAME|${db_name}|g" /opt/webapp/.env
 sed -i "s|PLACEHOLDER_APP_PORT|${app_port}|g" /opt/webapp/.env
 sed -i "s|PLACEHOLDER_REGION|$REGION|g" /opt/webapp/.env
@@ -85,11 +88,12 @@ sed -i "s|PLACEHOLDER_INSTANCE_ID|$INSTANCE_ID|g" /opt/webapp/.env
 chown csye6225:csye6225 /opt/webapp/.env
 chmod 600 /opt/webapp/.env
 
-# Verify password was written
-if grep -q "DB_PASSWORD=" /opt/webapp/.env; then
-    echo "✅ DB_PASSWORD added to .env"
+# Verify password was written (check for placeholder text - should be GONE)
+if grep -q "PLACEHOLDER_DB_PASSWORD" /opt/webapp/.env; then
+    echo "❌ PASSWORD SUBSTITUTION FAILED - placeholder still exists!"
+    echo "Debug: First 50 chars of DB_PASSWORD: ${DB_PASSWORD:0:50}"
 else
-    echo "❌ DB_PASSWORD missing from .env"
+    echo "✅ DB_PASSWORD substituted successfully"
 fi
 
 echo "✅ Environment file created at /opt/webapp/.env"
