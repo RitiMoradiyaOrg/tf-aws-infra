@@ -91,7 +91,6 @@ chmod 600 /opt/webapp/.env
 # Verify password was written (check for placeholder text - should be GONE)
 if grep -q "PLACEHOLDER_DB_PASSWORD" /opt/webapp/.env; then
     echo "❌ PASSWORD SUBSTITUTION FAILED - placeholder still exists!"
-    echo "Debug: First 50 chars of DB_PASSWORD: ${DB_PASSWORD:0:50}"
 else
     echo "✅ DB_PASSWORD substituted successfully"
 fi
