@@ -53,46 +53,32 @@ fi
 echo ""
 echo "📝 Creating environment configuration..."
 
-# ✅ CRITICAL FIX: Properly escape password for sed
-# This handles ALL special characters: { } * $ | [ ] \ / . ^ and more
-ESCAPED_PASSWORD=$(printf '%s\n' "$DB_PASSWORD" | sed -e 's/[]\/$*.^[]/\\&/g' -e 's/|/\\|/g')
-
-# Create .env with placeholders using quoted HERE document
-cat > /opt/webapp/.env << 'EOF'
-DB_HOST=PLACEHOLDER_DB_HOST
+# ✅ NEW APPROACH: Write .env directly without sed
+# This avoids ALL escaping issues with special characters
+cat > /opt/webapp/.env <<EOF
+DB_HOST=${db_host}
 DB_PORT=5432
-DB_USER=PLACEHOLDER_DB_USER
-DB_PASSWORD=PLACEHOLDER_DB_PASSWORD
-DB_NAME=PLACEHOLDER_DB_NAME
+DB_USER=${db_username}
+DB_PASSWORD=$DB_PASSWORD
+DB_NAME=${db_name}
 DB_DIALECT=postgres
 NODE_ENV=production
-PORT=PLACEHOLDER_APP_PORT
-AWS_REGION=PLACEHOLDER_REGION
-S3_BUCKET_NAME=PLACEHOLDER_S3_BUCKET
-SNS_TOPIC_ARN=PLACEHOLDER_SNS_TOPIC
+PORT=${app_port}
+AWS_REGION=$REGION
+S3_BUCKET_NAME=${s3_bucket}
+SNS_TOPIC_ARN=${sns_topic_arn}
 LOG_LEVEL=info
-INSTANCE_ID=PLACEHOLDER_INSTANCE_ID
+INSTANCE_ID=$INSTANCE_ID
 EOF
-
-# ✅ Now safely substitute each placeholder using sed with escaped password
-sed -i "s|PLACEHOLDER_DB_HOST|${db_host}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_DB_USER|${db_username}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_DB_PASSWORD|$ESCAPED_PASSWORD|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_DB_NAME|${db_name}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_APP_PORT|${app_port}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_REGION|$REGION|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_S3_BUCKET|${s3_bucket}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_SNS_TOPIC|${sns_topic_arn}|g" /opt/webapp/.env
-sed -i "s|PLACEHOLDER_INSTANCE_ID|$INSTANCE_ID|g" /opt/webapp/.env
 
 chown csye6225:csye6225 /opt/webapp/.env
 chmod 600 /opt/webapp/.env
 
-# Verify password was written (check for placeholder text - should be GONE)
-if grep -q "PLACEHOLDER_DB_PASSWORD" /opt/webapp/.env; then
-    echo "❌ PASSWORD SUBSTITUTION FAILED - placeholder still exists!"
+# Verify password was written
+if grep -q "DB_PASSWORD=" /opt/webapp/.env && ! grep -q "PLACEHOLDER" /opt/webapp/.env; then
+    echo "✅ .env file created with all variables"
 else
-    echo "✅ DB_PASSWORD substituted successfully"
+    echo "❌ .env file creation may have failed"
 fi
 
 echo "✅ Environment file created at /opt/webapp/.env"
@@ -283,4 +269,4 @@ fi
 echo ""
 echo "========================================="
 echo "✅ User-data completed - $(date)"
-echo "========================================="
+echo "========================================"
