@@ -152,8 +152,20 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWCO
       "files": {
         "collect_list": [
           {
-            "file_path": "/var/log/webapp/app.log",
-            "log_group_name": "/csye6225/${environment}/webapp/application",
+            "file_path": "/var/log/webapp/info.log",
+            "log_group_name": "/csye6225/${environment}/webapp/info",
+            "log_stream_name": "{instance_id}",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/webapp/error.log",
+            "log_group_name": "/csye6225/${environment}/webapp/error",
+            "log_stream_name": "{instance_id}",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/webapp/warn.log",
+            "log_group_name": "/csye6225/${environment}/webapp/warn",
             "log_stream_name": "{instance_id}",
             "timezone": "UTC"
           },

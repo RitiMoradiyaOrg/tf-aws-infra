@@ -537,17 +537,37 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 # CLOUDWATCH LOG GROUPS
 #######################################
 
-# CloudWatch Log Group for Application Logs
-resource "aws_cloudwatch_log_group" "webapp_application" {
-  name              = "/csye6225/${var.subdomain}/webapp/application"
+# CloudWatch Log Group - Info Level
+resource "aws_cloudwatch_log_group" "webapp_info" {
+  name              = "/csye6225/${var.subdomain}/webapp/info"
   retention_in_days = 7
 
   tags = merge(local.common_tags, {
-    Name = "${var.vpc_name}-webapp-application-logs"
+    Name = "${var.vpc_name}-webapp-info-logs"
   })
 }
 
-# CloudWatch Log Group for Deployment Logs
+# CloudWatch Log Group - Error Level
+resource "aws_cloudwatch_log_group" "webapp_error" {
+  name              = "/csye6225/${var.subdomain}/webapp/error"
+  retention_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-webapp-error-logs"
+  })
+}
+
+# CloudWatch Log Group - Warning Level
+resource "aws_cloudwatch_log_group" "webapp_warn" {
+  name              = "/csye6225/${var.subdomain}/webapp/warn"
+  retention_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-webapp-warn-logs"
+  })
+}
+
+# CloudWatch Log Group - Deployment Logs
 resource "aws_cloudwatch_log_group" "webapp_deployment" {
   name              = "/csye6225/${var.subdomain}/webapp/deployment"
   retention_in_days = 7
