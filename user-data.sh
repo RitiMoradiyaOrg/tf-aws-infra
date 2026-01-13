@@ -145,7 +145,7 @@ echo ""
 echo "📊 Configuring CloudWatch Agent..."
 
 # Create CloudWatch config
-cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWCONFIG'
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << CWCONFIG
 {
   "logs": {
     "logs_collected": {
