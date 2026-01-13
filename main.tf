@@ -658,11 +658,13 @@ resource "aws_lb" "webapp" {
   })
 }
 
-# ALB Listener (HTTP on port 80)
-resource "aws_lb_listener" "webapp_http" {
+# HTTPS Listener (Port 443) - Primary
+resource "aws_lb_listener" "webapp_https" {
   load_balancer_arn = aws_lb.webapp.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = aws_acm_certificate_validation.cert_validation.certificate_arn
 
   default_action {
     type             = "forward"
@@ -670,7 +672,28 @@ resource "aws_lb_listener" "webapp_http" {
   }
 
   tags = merge(local.common_tags, {
-    Name = "${var.vpc_name}-listener-http"
+    Name = "${var.vpc_name}-listener-https"
+  })
+}
+
+# HTTP Listener (Port 80) - Redirect to HTTPS
+resource "aws_lb_listener" "webapp_http" {
+  load_balancer_arn = aws_lb.webapp.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.vpc_name}-listener-http-redirect"
   })
 }
 
