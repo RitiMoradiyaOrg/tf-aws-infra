@@ -4,7 +4,7 @@
 
 [![Terraform](https://img.shields.io/badge/Terraform-1.5+-623CE4)](https://www.terraform.io/)
 [![AWS](https://img.shields.io/badge/AWS-Multi--AZ-FF9900)](https://aws.amazon.com/)
-[![Infrastructure](https://img.shields.io/badge/Resources-95+-success)](https://github.com/RitiMoradiyaOrg/tf-aws-infra-fork)
+[![Infrastructure](https://img.shields.io/badge/Resources-95+-success)](./main.tf)
 [![Security](https://img.shields.io/badge/Security-Enterprise--Grade-red)](https://aws.amazon.com/security/)
 
 ---
